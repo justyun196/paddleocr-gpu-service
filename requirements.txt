@@ -1,0 +1,4 @@
+fastapi==0.104.1
+uvicorn[standard]==0.27.1
+paddlepaddle-gpu==2.5.1.post117
+paddleocr==2.7.0.3
