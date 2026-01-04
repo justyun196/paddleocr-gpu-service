@@ -1,4 +1,4 @@
-name: Build and Push to Aliyun
+name: Build2 and Push to Aliyun ACR
 
 on:
   push:
@@ -6,40 +6,68 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
       
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-      
-    # 方法1：使用阿里云容器镜像服务专用登录（推荐）
-    - name: Login to Aliyun Container Registry (ACR)
+    - name: Configure Aliyun credentials
       run: |
-        docker login \
-          --username="${{ secrets.ALIYUN_USERNAME }}" \
-          --password="${{ secrets.ALIYUN_PASSWORD }}" \
-          registry.cn-hangzhou.aliyuncs.com
+        # 安装阿里云CLI
+        wget https://aliyuncli.alicdn.com/aliyun-cli-linux-latest-amd64.tgz
+        tar -xzf aliyun-cli-linux-latest-amd64.tgz
+        chmod +x aliyun
+        
+        # 配置AccessKey
+        ./aliyun configure set \
+          --profile default \
+          --mode AccessKey \
+          --region cn-hangzhou \
+          --access-key-id "${{ secrets.ALIYUN_ACCESS_KEY_ID }}" \
+          --access-key-secret "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}"
+    
+    - name: Get ACR authorization token
+      id: get_token
+      run: |
+        # 使用阿里云CLI获取ACR临时密码
+        TOKEN=$(./aliyun cr GetAuthorizationToken --endpoint cr.cn-hangzhou.aliyuncs.com | jq -r '.data.authorizationToken')
+        echo "token=${TOKEN}" >> $GITHUB_OUTPUT
+        
+    - name: Login to Aliyun Container Registry
+      run: |
+        # 解析token为用户名和密码
+        TOKEN="${{ steps.get_token.outputs.token }}"
+        if [ -n "$TOKEN" ]; then
+          # token格式是 base64(用户名:密码)
+          CREDENTIALS=$(echo $TOKEN | base64 -d)
+          USERNAME=$(echo $CREDENTIALS | cut -d: -f1)
+          PASSWORD=$(echo $CREDENTIALS | cut -d: -f2)
           
-    # 方法2：或者使用 AccessKey 登录（备选）
-    # - name: Login to Aliyun Container Registry with AccessKey
-    #   run: |
-    #     docker login \
-    #       --username="${{ secrets.ACCESS_KEY_ID }}" \
-    #       --password="${{ secrets.ACCESS_KEY_SECRET }}" \
-    #       registry.cn-hangzhou.aliyuncs.com
+          echo "Logging in to ${{ secrets.ALIYUN_REGISTRY }}..."
+          echo $PASSWORD | docker login \
+            --username "$USERNAME" \
+            --password-stdin \
+            "${{ secrets.ALIYUN_REGISTRY }}"
+        else
+          echo "ERROR: Failed to get authorization token"
+          exit 1
+        fi
     
     - name: Build Docker image
       run: |
         docker build \
-          --tag registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest \
-          --tag registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }} \
+          --tag ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest \
+          --tag ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }} \
           .
-          
+    
     - name: Push Docker image
       run: |
-        docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest
-        docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}
+        docker push ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest
+        docker push ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}
+        
+    - name: Deploy to Function Compute (可选)
+      run: |
+        echo "镜像构建完成，可以手动部署到函数计算"
+        echo "镜像地址: ${{ secrets.ALIYUN_REGISTRY }}/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest"
