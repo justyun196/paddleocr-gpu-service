@@ -1,0 +1,45 @@
+name: Build and Push to Aliyun
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    # 方法1：使用阿里云容器镜像服务专用登录（推荐）
+    - name: Login to Aliyun Container Registry (ACR)
+      run: |
+        docker login \
+          --username="${{ secrets.ALIYUN_USERNAME }}" \
+          --password="${{ secrets.ALIYUN_PASSWORD }}" \
+          registry.cn-hangzhou.aliyuncs.com
+          
+    # 方法2：或者使用 AccessKey 登录（备选）
+    # - name: Login to Aliyun Container Registry with AccessKey
+    #   run: |
+    #     docker login \
+    #       --username="${{ secrets.ACCESS_KEY_ID }}" \
+    #       --password="${{ secrets.ACCESS_KEY_SECRET }}" \
+    #       registry.cn-hangzhou.aliyuncs.com
+    
+    - name: Build Docker image
+      run: |
+        docker build \
+          --tag registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest \
+          --tag registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }} \
+          .
+          
+    - name: Push Docker image
+      run: |
+        docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest
+        docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}
