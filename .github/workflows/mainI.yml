@@ -1,0 +1,26 @@
+name: Test Build Only
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Test Docker Build
+      run: |
+        echo "=== 测试 Docker Build ==="
+        echo "当前目录内容:"
+        ls -la
+        
+        echo "=== Dockerfile 内容 ==="
+        cat Dockerfile || echo "No Dockerfile"
+        
+        echo "=== requirements.txt 内容 ==="
+        cat requirements.txt || echo "No requirements.txt"
+        
+        # 只构建，不推送
+        docker build -t test-image .
+        echo "✅ Docker 构建成功"
