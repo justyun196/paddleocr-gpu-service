@@ -1,0 +1,113 @@
+name: Direct ACR Push
+
+
+
+on: [push]
+
+
+
+jobs:
+
+  push:
+
+    runs-on: ubuntu-latest
+
+    
+
+    steps:
+
+    - uses: actions/checkout@v3
+
+    
+
+    - name: Docker login to ACR (Direct Method)
+
+      run: |
+
+        # 直接使用阿里云API获取docker登录密码
+
+        # 这个方法不依赖任何第三方Action
+
+        
+
+        # 阿里云API endpoint
+
+        REGISTRY="registry.cn-hangzhou.aliyuncs.com"
+
+        
+
+        # 使用阿里云API获取临时token
+
+        # 需要安装 curl 和 jq（GitHub Actions默认已安装）
+
+        
+
+        # 构建请求
+
+        RESPONSE=$(curl -s -X GET \
+
+          "https://cr.cn-hangzhou.aliyuncs.com/tokens" \
+
+          -H "Authorization: acs ${{ secrets.ALIYUN_ACCESS_KEY_ID }}:${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" \
+
+          -H "Content-Type: application/json")
+
+        
+
+        echo "API Response: $RESPONSE"
+
+        
+
+        # 提取token
+
+        TOKEN=$(echo $RESPONSE | jq -r '.data.dockerToken')
+
+        
+
+        if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
+
+          echo "ERROR: Failed to get docker token"
+
+          echo "Trying alternative method..."
+
+          
+
+          # 备选方法：使用固定用户名密码
+
+          echo "${{ secrets.ALIYUN_PASSWORD }}" | docker login \
+
+            --username "${{ secrets.ALIYUN_USERNAME }}" \
+
+            --password-stdin \
+
+            $REGISTRY
+
+        else
+
+          echo "Got token, logging in..."
+
+          echo $TOKEN | docker login \
+
+            --username "acs:token" \
+
+            --password-stdin \
+
+            $REGISTRY
+
+        fi
+
+    
+
+    - name: Build
+
+      run: |
+
+        docker build -t registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest .
+
+    
+
+    - name: Push
+
+      run: |
+
+        docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest
