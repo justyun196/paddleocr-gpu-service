@@ -1,113 +1,92 @@
-name: Direct ACR Push
+name: Build and Push to Aliyun ACR
 
-
-
-on: [push]
-
-
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-
-  push:
-
+  build:
     runs-on: ubuntu-latest
-
     
-
     steps:
-
-    - uses: actions/checkout@v3
-
+    - name: Checkout code
+      uses: actions/checkout@v3
     
-
-    - name: Docker login to ACR (Direct Method)
-
+    # 第一步：安装阿里云 CLI
+    - name: Setup Aliyun CLI
       run: |
-
-        # 直接使用阿里云API获取docker登录密码
-
-        # 这个方法不依赖任何第三方Action
-
+        # 下载阿里云 CLI
+        wget https://aliyuncli.alicdn.com/aliyun-cli-linux-3.0.32-amd64.tgz -O aliyun-cli.tgz
+        tar -xzf aliyun-cli.tgz
+        chmod +x aliyun
+        sudo mv aliyun /usr/local/bin/
+        aliyun --version
+    
+    # 第二步：配置阿里云 CLI
+    - name: Configure Aliyun CLI
+      run: |
+        aliyun configure set \
+          --profile akProfile \
+          --mode AK \
+          --region cn-hangzhou \
+          --access-key-id "${{ secrets.ALIYUN_ACCESS_KEY_ID }}" \
+          --access-key-secret "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}"
+    
+    # 第三步：获取 ACR 临时密码
+    - name: Get ACR Login Password
+      id: acr_login
+      run: |
+        # 获取授权令牌
+        RESPONSE=$(aliyun cr GetAuthorizationToken \
+          --RegionId cn-hangzhou \
+          --endpoint cr.cn-hangzhou.aliyuncs.com)
         
-
-        # 阿里云API endpoint
-
-        REGISTRY="registry.cn-hangzhou.aliyuncs.com"
-
+        echo "Response: $RESPONSE"
         
-
-        # 使用阿里云API获取临时token
-
-        # 需要安装 curl 和 jq（GitHub Actions默认已安装）
-
+        # 提取临时密码
+        TEMP_PASSWORD=$(echo $RESPONSE | jq -r '.data.authorizationToken')
+        echo "TEMP_PASSWORD=$TEMP_PASSWORD" >> $GITHUB_OUTPUT
         
-
-        # 构建请求
-
-        RESPONSE=$(curl -s -X GET \
-
-          "https://cr.cn-hangzhou.aliyuncs.com/tokens" \
-
-          -H "Authorization: acs ${{ secrets.ALIYUN_ACCESS_KEY_ID }}:${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" \
-
-          -H "Content-Type: application/json")
-
-        
-
-        echo "API Response: $RESPONSE"
-
-        
-
-        # 提取token
-
-        TOKEN=$(echo $RESPONSE | jq -r '.data.dockerToken')
-
-        
-
-        if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
-
-          echo "ERROR: Failed to get docker token"
-
-          echo "Trying alternative method..."
-
-          
-
-          # 备选方法：使用固定用户名密码
-
-          echo "${{ secrets.ALIYUN_PASSWORD }}" | docker login \
-
-            --username "${{ secrets.ALIYUN_USERNAME }}" \
-
-            --password-stdin \
-
-            $REGISTRY
-
-        else
-
-          echo "Got token, logging in..."
-
-          echo $TOKEN | docker login \
-
-            --username "acs:token" \
-
-            --password-stdin \
-
-            $REGISTRY
-
+        if [ -z "$TEMP_PASSWORD" ] || [ "$TEMP_PASSWORD" = "null" ]; then
+          echo "ERROR: Failed to get authorization token"
+          exit 1
         fi
-
     
-
-    - name: Build
-
+    # 第四步：登录到 ACR
+    - name: Login to Aliyun Container Registry
       run: |
-
-        docker build -t registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest .
-
+        # 临时密码是 base64 编码的 username:password
+        CREDENTIALS=$(echo "${{ steps.acr_login.outputs.TEMP_PASSWORD }}" | base64 -d)
+        echo "Credentials: $CREDENTIALS"
+        
+        # 提取用户名和密码
+        ACR_USERNAME=$(echo "$CREDENTIALS" | cut -d: -f1)
+        ACR_PASSWORD=$(echo "$CREDENTIALS" | cut -d: -f2)
+        
+        # 登录到 ACR
+        echo "$ACR_PASSWORD" | docker login \
+          --username "$ACR_USERNAME" \
+          --password-stdin \
+          registry.cn-hangzhou.aliyuncs.com
     
-
-    - name: Push
-
+    # 第五步：构建 Docker 镜像
+    - name: Build Docker Image
       run: |
-
+        docker build \
+          --tag registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest \
+          --tag registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }} \
+          .
+    
+    # 第六步：推送镜像
+    - name: Push Docker Image
+      run: |
         docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest
+        docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}
+    
+    # 第七步：输出信息
+    - name: Output Info
+      run: |
+        echo "✅ 镜像构建并推送成功！"
+        echo "镜像地址：registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest"
+        echo "镜像版本：registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}"
