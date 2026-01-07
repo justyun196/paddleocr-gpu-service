@@ -1,96 +1,27 @@
-name: Build and Push to Aliyun ACR
+name: Test Simple Login
 
-on:
-  push:
-    branches: [ main ]
+on: [push]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v3
     
-    # 安装必要的工具
-    - name: Install dependencies
+    - name: Test Docker Login (Debug)
+      env:
+        USER: ${{ secrets.ALIYUN_USERNAME }}
+        PASS: ${{ secrets.ALIYUN_PASSWORD }}
       run: |
-        sudo apt-get update
-        sudo apt-get install -y jq curl
-    
-    # 下载阿里云 CLI
-    - name: Setup Aliyun CLI
-      run: |
-        wget https://aliyuncli.alicdn.com/aliyun-cli-linux-3.0.32-amd64.tgz -O aliyun-cli.tgz
-        tar -xzf aliyun-cli.tgz
-        chmod +x aliyun
-        sudo mv aliyun /usr/local/bin/
-        aliyun --version
-    
-    # 配置阿里云 CLI
-    - name: Configure Aliyun CLI
-      run: |
-        aliyun configure set \
-          --profile akProfile \
-          --mode AK \
-          --region cn-hangzhou \
-          --access-key-id "${{ secrets.ALIYUN_ACCESS_KEY_ID }}" \
-          --access-key-secret "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}"
-    
-    # 获取 ACR 临时密码
-    - name: Get ACR Login Password
-      id: acr_login
-      run: |
-        # 获取授权令牌
-        RESPONSE=$(aliyun cr GetAuthorizationToken \
-          --RegionId cn-hangzhou \
-          --endpoint cr.cn-hangzhou.aliyuncs.com)
+        echo "Username length: ${#USER}"
+        echo "Password length: ${#PASS}"
+        echo "Namespace: ${{ secrets.ALIYUN_NAMESPACE }}"
         
-        echo "Raw Response:"
-        echo "$RESPONSE"
-        
-        # 使用 jq 提取临时密码
-        TEMP_PASSWORD=$(echo "$RESPONSE" | jq -r '.data.authorizationToken')
-        echo "TEMP_PASSWORD=$TEMP_PASSWORD" >> $GITHUB_OUTPUT
-        
-        if [ -z "$TEMP_PASSWORD" ] || [ "$TEMP_PASSWORD" = "null" ]; then
-          echo "ERROR: Failed to get authorization token"
-          echo "Trying alternative method..."
-          
-          # 备选方案：使用固定密码
-          echo "ALIYUN_FIXED_PASSWORD=${{ secrets.ALIYUN_FIXED_PASSWORD }}" >> $GITHUB_OUTPUT
-        fi
-    
-    # 登录到 ACR
-    - name: Login to Aliyun Container Registry
-      run: |
-        # 检查使用哪种密码
-        if [ -n "${{ steps.acr_login.outputs.TEMP_PASSWORD }}" ] && [ "${{ steps.acr_login.outputs.TEMP_PASSWORD }}" != "null" ]; then
-          echo "Using temporary token..."
-          TEMP_PASSWORD="${{ steps.acr_login.outputs.TEMP_PASSWORD }}"
-          CREDENTIALS=$(echo "$TEMP_PASSWORD" | base64 -d)
-          ACR_USERNAME=$(echo "$CREDENTIALS" | cut -d: -f1)
-          ACR_PASSWORD=$(echo "$CREDENTIALS" | cut -d: -f2)
+        # 测试登录
+        if echo "$PASS" | docker login --username "$USER" --password-stdin registry.cn-hangzhou.aliyuncs.com; then
+          echo "✅ Docker login successful!"
         else
-          echo "Using fixed password..."
-          ACR_USERNAME="${{ secrets.ALIYUN_USERNAME }}"
-          ACR_PASSWORD="${{ secrets.ALIYUN_FIXED_PASSWORD }}"
+          echo "❌ Docker login failed"
         fi
-        
-        echo "$ACR_PASSWORD" | docker login \
-          --username "$ACR_USERNAME" \
-          --password-stdin \
-          registry.cn-hangzhou.aliyuncs.com
-    
-    # 构建和推送
-    - name: Build Docker Image
-      run: |
-        docker build \
-          --tag registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest \
-          --tag registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }} \
-          .
-    
-    - name: Push Docker Image
-      run: |
-        docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:latest
-        docker push registry.cn-hangzhou.aliyuncs.com/${{ secrets.ALIYUN_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}
