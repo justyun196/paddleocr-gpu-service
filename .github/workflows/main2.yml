@@ -1,4 +1,4 @@
-name: Test Simple Login
+name: Test Personal ACR
 
 on: [push]
 
@@ -7,21 +7,26 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
     
-    - name: Test Docker Login (Debug)
+    - name: Test Login to Personal ACR
       env:
-        USER: ${{ secrets.ALIYUN_USERNAME }}
-        PASS: ${{ secrets.ALIYUN_PASSWORD }}
+        ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com
+        ACR_USERNAME: ${{ secrets.ALIYUN_USERNAME }}
+        ACR_PASSWORD: ${{ secrets.ALIYUN_PASSWORD }}
       run: |
-        echo "Username length: ${#USER}"
-        echo "Password length: ${#PASS}"
-        echo "Namespace: ${{ secrets.ALIYUN_NAMESPACE }}"
+        echo "测试登录到: $ACR_INSTANCE"
         
-        # 测试登录
-        if echo "$PASS" | docker login --username "$USER" --password-stdin registry.cn-hangzhou.aliyuncs.com; then
-          echo "✅ Docker login successful!"
+        if echo "$ACR_PASSWORD" | docker login \
+          --username "$ACR_USERNAME" \
+          --password-stdin \
+          "$ACR_INSTANCE"; then
+          echo "✅ 登录成功！"
+          echo "实例地址正确: $ACR_INSTANCE"
         else
-          echo "❌ Docker login failed"
+          echo "❌ 登录失败"
+          echo "请检查："
+          echo "1. 实例地址是否正确"
+          echo "2. 用户名密码是否正确"
+          exit 1
         fi
