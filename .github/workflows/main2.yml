@@ -8,7 +8,7 @@ env:
   # 你的个人版实例地址
   ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com
   # 你的命名空间
-  ACR_NAMESPACE: your-namespace  # 改成你的命名空间
+  ACR_NAMESPACE: yunzyuns  # 改成你的命名空间
 
 jobs:
   build:
