@@ -1,58 +1,65 @@
 name: Deploy PaddleOCR GPU to Aliyun
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:  # 允许手动触发
+on: 
+  push: 
+    branches: [ main ] 
+  workflow_dispatch:
 
-env:
-  # 你的个人版实例地址
-  ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com
-  # 从 secret 读取命名空间
-  ACR_NAMESPACE: ${{ secrets.ALIYUN_NAMESPACE }}
+env: 
+  ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com 
+  ACR_NAMESPACE: ${{ secrets.ALIYUN_NAMESPACE }} 
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+jobs: 
+  build-and-deploy: 
+    runs-on: ubuntu-latest 
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    steps: 
+    - name: Checkout code 
+      uses: actions/checkout@v3 
     
-    # RAM 用户需要特殊格式的用户名：AccessKey@实例ID
-    - name: Login to Aliyun Personal ACR
+    - name: Debug Secrets
       run: |
-        echo "登录到: ${{ env.ACR_INSTANCE }}"
+        echo "检查 Secrets 配置..."
+        if [ -z "${{ secrets.ALIYUN_ACCESS_KEY_ID }}" ]; then
+          echo "❌ ALIYUN_ACCESS_KEY_ID 未配置"
+          exit 1
+        fi
+        if [ -z "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" ]; then
+          echo "❌ ALIYUN_ACCESS_KEY_SECRET 未配置"
+          exit 1
+        fi
+        if [ -z "${{ secrets.ALIYUN_NAMESPACE }}" ]; then
+          echo "❌ ALIYUN_NAMESPACE 未配置"
+          exit 1
+        fi
+        echo "✅ Secrets 配置正确"
+    
+    - name: Login to Aliyun Personal ACR 
+      run: | 
+        echo "登录到: ${{ env.ACR_INSTANCE }}" 
         echo "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" | docker login \
           --username "${{ secrets.ALIYUN_ACCESS_KEY_ID }}@30m5pxt0p5qxy6sk" \
           --password-stdin \
           ${{ env.ACR_INSTANCE }}
     
-    - name: Build Docker Image (GPU version)
-      run: |
-        echo "构建 GPU 版本的 PaddleOCR 镜像..."
+    - name: Build Docker Image (GPU version) 
+      run: | 
+        echo "构建 GPU 版本的 PaddleOCR 镜像..." 
         docker build \
           --tag ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest \
           --tag ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:${{ github.sha }} \
           .
     
-    - name: Push to Aliyun ACR
-      run: |
-        echo "推送镜像到阿里云..."
-        docker push ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest
+    - name: Push to Aliyun ACR 
+      run: | 
+        echo "推送镜像到阿里云..." 
+        docker push ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest 
         docker push ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}
     
-    - name: Output Deployment Info
-      run: |
-        echo "✅ 部署成功！"
-        echo ""
-        echo "=== 镜像信息 ==="
-        echo "最新镜像: ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest"
+    - name: Output Deployment Info 
+      run: | 
+        echo "✅ 部署成功！" 
+        echo "" 
+        echo "=== 镜像信息 ===" 
+        echo "最新镜像: ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest" 
         echo "版本镜像: ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}"
-        echo ""
-        echo "=== 阿里云函数计算配置 ==="
-        echo "1. 创建 GPU 函数"
-        echo "2. 镜像地址填写: ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest"
-        echo "3. 端口: 9000"
-        echo "4. 内存: 16GB 以上"
-        echo "5. GPU: T4"
