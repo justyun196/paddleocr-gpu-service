@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 env: 
-  ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com 
+  # 修改为正确的实例 ID
+  ACR_INSTANCE: crpi-1905267060449036.cn-hangzhou.personal.cr.aliyuncs.com 
   ACR_NAMESPACE: ${{ secrets.ALIYUN_NAMESPACE }} 
 
 jobs: 
@@ -17,28 +18,12 @@ jobs:
     - name: Checkout code 
       uses: actions/checkout@v3 
     
-    - name: Debug Secrets
-      run: |
-        echo "检查 Secrets 配置..."
-        if [ -z "${{ secrets.ALIYUN_ACCESS_KEY_ID }}" ]; then
-          echo "❌ ALIYUN_ACCESS_KEY_ID 未配置"
-          exit 1
-        fi
-        if [ -z "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" ]; then
-          echo "❌ ALIYUN_ACCESS_KEY_SECRET 未配置"
-          exit 1
-        fi
-        if [ -z "${{ secrets.ALIYUN_NAMESPACE }}" ]; then
-          echo "❌ ALIYUN_NAMESPACE 未配置"
-          exit 1
-        fi
-        echo "✅ Secrets 配置正确"
-    
+    # 修改登录用户名中的实例 ID
     - name: Login to Aliyun Personal ACR 
       run: | 
         echo "登录到: ${{ env.ACR_INSTANCE }}" 
         echo "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" | docker login \
-          --username "${{ secrets.ALIYUN_ACCESS_KEY_ID }}@30m5pxt0p5qxy6sk" \
+          --username "${{ secrets.ALIYUN_ACCESS_KEY_ID }}@1905267060449036" \
           --password-stdin \
           ${{ env.ACR_INSTANCE }}
     
