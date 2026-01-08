@@ -1,48 +1,22 @@
-name: Deploy PaddleOCR GPU to Aliyun
+name: Test ACR Login
 
-on: 
-  push: 
-    branches: [ main ] 
+on:
   workflow_dispatch:
 
-env: 
-  ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com 
-  ACR_NAMESPACE: ${{ secrets.ALIYUN_NAMESPACE }} 
+env:
+  ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com
 
-jobs: 
-  build-and-deploy: 
-    runs-on: ubuntu-latest 
+jobs:
+  test-login:
+    runs-on: ubuntu-latest
     
-    steps: 
-    - name: Checkout code 
-      uses: actions/checkout@v3 
-    
-    - name: Login to Aliyun Personal ACR 
-      run: | 
-        echo "登录到: ${{ env.ACR_INSTANCE }}" 
-        echo "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" | docker login \
-          --username "${{ secrets.ALIYUN_ACCESS_KEY_ID }}@crpi-30m5pxt0p5qxy6sk" \
+    steps:
+    - name: Test Login with RAM User ID
+      run: |
+        echo "测试新个人版域名"
+        echo "登录到: ${{ env.ACR_INSTANCE }}"
+        echo "viJmOV0PANcUFFfgURvbLhQlKAZ22c" | docker login \
+          --username "LTAI5tJrCCzD9v4GUmC43kL7@1905267060449036" \
           --password-stdin \
           ${{ env.ACR_INSTANCE }}
-    
-    - name: Build Docker Image (GPU version) 
-      run: | 
-        echo "构建 GPU 版本的 PaddleOCR 镜像..." 
-        docker build \
-          --tag ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest \
-          --tag ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:${{ github.sha }} \
-          .
-    
-    - name: Push to Aliyun ACR 
-      run: | 
-        echo "推送镜像到阿里云..." 
-        docker push ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest 
-        docker push ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}
-    
-    - name: Output Deployment Info 
-      run: | 
-        echo "✅ 部署成功！" 
-        echo "" 
-        echo "=== 镜像信息 ===" 
-        echo "最新镜像: ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:latest" 
-        echo "版本镜像: ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/paddleocr-gpu:${{ github.sha }}"
+        echo "✅ 登录成功！"
