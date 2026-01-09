@@ -1,7 +1,7 @@
 name: Test ACR Login
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # 允许手动触发
 
 env:
   ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com
@@ -11,12 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
     - name: Test Login with RAM User ID
       run: |
-        echo "测试新个人版域名"
+        echo "测试登录格式: AccessKeyID@RAM用户ID"
         echo "登录到: ${{ env.ACR_INSTANCE }}"
-        echo "viJmOV0PANcUFFfgURvbLhQlKAZ22c" | docker login \
-          --username "LTAI5tJrCCzD9v4GUmC43kL7@1905267060449036" \
+        echo "${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}" | docker login \
+          --username "${{ secrets.ALIYUN_ACCESS_KEY_ID }}@1905267060449036" \
           --password-stdin \
           ${{ env.ACR_INSTANCE }}
         echo "✅ 登录成功！"
+    
+    - name: Verify Login
+      run: |
+        echo "验证登录状态..."
+        docker pull hello-world || echo "拉取测试镜像失败（可能不存在）"
+        echo "Docker 登录状态:"
+        cat ~/.docker/config.json | grep -A 5 "crpi-30m5pxt0p5qxy6sk"
