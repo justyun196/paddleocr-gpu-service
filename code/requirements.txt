@@ -1,0 +1,7 @@
+code/requirements.txt
+paddleocr>=3.3.0
+paddlepaddle>=2.6.0
+opencv-python
+openpyxl
+oss2
+numpy
