@@ -1,0 +1,55 @@
+.github/workflows/deploy-fc.yml
+name: Deploy PaddleOCR to Aliyun FC
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com
+  ACR_NAMESPACE: yunzyuns
+  IMAGE_NAME: answer-card-ocr
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Login to Aliyun ACR
+      run: |
+        echo "登录到: ${{ env.ACR_INSTANCE }}"
+        echo "${{ secrets.ALIYUN_PASSWORD }}" | docker login \
+          --username "${{ secrets.ALIYUN_USERNAME }}" \
+          --password-stdin \
+          ${{ env.ACR_INSTANCE }}
+    
+    - name: Build Docker Image (CPU version for FC)
+      run: |
+        echo "构建 CPU 版本的 PaddleOCR 镜像（用于函数计算）..."
+        docker build \
+          --tag ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest \
+          --tag ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          --file Dockerfile \
+          .
+    
+    - name: Push to Aliyun ACR
+      run: |
+        echo "推送镜像到阿里云..."
+        docker push ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest
+        docker push ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+    
+    - name: Output Deployment Info
+      run: |
+        echo "✅ 部署成功！"
+        echo ""
+        echo "=== 镜像信息 ==="
+        echo "最新镜像: ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest"
+        echo "版本镜像: ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        echo ""
+        echo "=== 函数计算使用 ==="
+        echo "在创建函数时，使用以下镜像地址："
+        echo "${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest"
