@@ -1,4 +1,3 @@
-.github/workflows/deploy-fc.yml
 name: Deploy PaddleOCR to Aliyun FC
 
 on:
