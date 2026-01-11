@@ -1,6 +1,6 @@
 import json, base64, os, io, time, gc
 import paddle
-paddle.set_device('cpu')
+paddle.set_device('gpu')
 paddle.disable_static()
 
 from paddleocr import PaddleOCRVL
@@ -13,9 +13,9 @@ ocr = None
 def init_ocr():
     global ocr
     if ocr is None:
-        print("正在初始化PaddleOCRVL模型...")
+        print("正在初始化PaddleOCRVL模型（GPU版本）...")
         ocr = PaddleOCRVL(
-            device='cpu',
+            device='gpu',
             precision='fp16',
             enable_mkldnn=False,
             vl_rec_model_name='PaddleOCR-VL-0.9B',

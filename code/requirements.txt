@@ -1,5 +1,5 @@
 paddleocr>=3.3.0
-paddlepaddle>=2.6.0
+paddlepaddle-gpu==2.6.0.post117
 opencv-python
 openpyxl
 oss2

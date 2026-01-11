@@ -1,5 +1,5 @@
 
-FROM python:3.10-slim
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y libgomp1 libglib2.0-0 libsm6 libxext6 libxrender-dev libgl1 && rm -rf /var/lib/apt/lists/*
