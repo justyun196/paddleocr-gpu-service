@@ -1,4 +1,3 @@
-code/handler.py
 import json, base64, os, io, time, gc
 import paddle
 paddle.set_device('cpu')
