@@ -27,4 +27,4 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 9000
 
 # 启动命令
-CMD ["handler.handler"]
+CMD ["python", "server.py"]
