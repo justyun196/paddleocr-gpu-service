@@ -2,7 +2,7 @@
 FROM python:3.10-slim
 
 # 安装系统依赖
-RUN apt-get update && apt-get install -y libgomp1 libglib2.0-0 libsm6 libxext6 libxrender-dev libgl1-mesa-glx && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libgomp1 libglib2.0-0 libsm6 libxext6 libxrender-dev libgl1 && rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /code
