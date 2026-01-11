@@ -53,3 +53,4 @@ jobs:
         echo "=== 函数计算使用 ==="
         echo "在创建函数时，使用以下镜像地址："
         echo "${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest"
+
