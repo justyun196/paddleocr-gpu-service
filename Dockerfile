@@ -2,24 +2,21 @@
 FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 # 安装 Python 和系统依赖
-RUN apt-get update && apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && apt-get install -y \
-    python3.10 \
-    python3.10-dev \
+RUN apt-get update && apt-get install -y \
+    python3 \
     python3-pip \
+    python3-dev \
     libgomp1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
     libgl1 \
-    libgthread-2.0-0 \
     libpango-1.0-0 \
     libcairo2 \
     wget \
     && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/bin/python3.10 /usr/bin/python \
+    && ln -sf /usr/bin/python3 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
 # 设置工作目录
