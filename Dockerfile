@@ -12,6 +12,15 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgl1 \
+    libgl1-mesa-glx \
+    libfontconfig1 \
+    libfreetype6 \
+    libx11-6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxcursor1 \
+    libxinerama1 \
     libpango-1.0-0 \
     libcairo2 \
     wget \
