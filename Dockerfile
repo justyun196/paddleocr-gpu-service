@@ -1,5 +1,5 @@
 
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
+FROM ubuntu:22.04
 
 # 安装 Python 和系统依赖
 RUN apt-get update && apt-get install -y \
@@ -38,7 +38,7 @@ COPY code/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 预加载模型（首次启动时下载）
-RUN python -c "from paddleocr import PaddleOCRVL; PaddleOCRVL(device='gpu', precision='fp16', enable_mkldnn=False, vl_rec_model_name='PaddleOCR-VL-0.9B', use_layout_detection=False)" || echo "模型预加载完成"
+RUN python -c "from paddleocr import PaddleOCRVL; PaddleOCRVL(device='cpu', precision='fp32', enable_mkldnn=True, vl_rec_model_name='PaddleOCR-VL-0.9B', use_layout_detection=False)" || echo "模型预加载完成"
 
 # 复制代码
 COPY code/ /code/

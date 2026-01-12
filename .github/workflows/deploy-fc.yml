@@ -8,7 +8,7 @@ on:
 env:
   ACR_INSTANCE: crpi-30m5pxt0p5qxy6sk.cn-hangzhou.personal.cr.aliyuncs.com
   ACR_NAMESPACE: yunzyuns
-  IMAGE_NAME: answer-card-ocr-gpu
+  IMAGE_NAME: answer-card-ocr
 
 jobs:
   build-and-deploy:

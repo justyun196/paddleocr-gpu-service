@@ -1,5 +1,5 @@
 paddleocr
-paddlepaddle-gpu
+paddlepaddle
 opencv-python
 openpyxl
 oss2
