@@ -26,9 +26,9 @@ jobs:
           --password-stdin \
           ${{ env.ACR_INSTANCE }}
     
-    - name: Build Docker Image (GPU version for FC)
+    - name: Build Docker Image (CPU version for FC)
       run: |
-        echo "构建 GPU 版本的 PaddleOCR 镜像（用于函数计算）..."
+        echo "构建 CPU 版本的 PaddleOCR 镜像（用于函数计算）..."
         docker build \
           --tag ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:latest \
           --tag ${{ env.ACR_INSTANCE }}/${{ env.ACR_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
