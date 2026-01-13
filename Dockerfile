@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgl1 \
-    libgl1-mesa-glx \
     libfontconfig1 \
     libfreetype6 \
     libx11-6 \
