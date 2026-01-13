@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     libgl1 \
+    libgl1-mesa-glx \
     libfontconfig1 \
     libfreetype6 \
     libx11-6 \
@@ -22,6 +23,11 @@ RUN apt-get update && apt-get install -y \
     libxinerama1 \
     libpango-1.0-0 \
     libcairo2 \
+    libgdk-pixbuf2.0-0 \
+    libgtk-3-0 \
+    libatlas-base-dev \
+    liblapack-dev \
+    gfortran \
     wget \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/python3 /usr/bin/python \
