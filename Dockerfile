@@ -1,5 +1,5 @@
 
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 
 # 安装 Python 和系统依赖
 RUN apt-get update && apt-get install -y \
