@@ -8,12 +8,10 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     libgomp1 \
     libglib2.0-0 \
-    libgthread-2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
     libgl1 \
-    libgl1-mesa-glx \
     libfontconfig1 \
     libfreetype6 \
     libx11-6 \
@@ -23,12 +21,7 @@ RUN apt-get update && apt-get install -y \
     libxcursor1 \
     libxinerama1 \
     libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
     libcairo2 \
-    libgbm1 \
-    libasound2 \
     wget \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/python3 /usr/bin/python \
