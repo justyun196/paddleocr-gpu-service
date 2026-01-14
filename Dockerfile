@@ -2,7 +2,7 @@
 FROM ubuntu:20.04
 
 # 安装 Python 和系统依赖
-RUN apt-get update && apt-get install -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     python3 \
     python3-pip \
     python3-dev \
@@ -43,7 +43,7 @@ COPY code/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 预加载模型（首次启动时下载）
-#RUN python -c "from paddleocr import PaddleOCRVL; PaddleOCRVL(device='cpu', precision='fp32', enable_mkldnn=True, vl_rec_model_name='PaddleOCR-VL-0.9B', use_layout_detection=False)" || echo "模型预加载完成"
+RUN python -c "from paddleocr import PaddleOCRVL; PaddleOCRVL(device='cpu', precision='fp32', enable_mkldnn=True, vl_rec_model_name='PaddleOCR-VL-0.9B', use_layout_detection=False)" || echo "模型预加载完成"
 
 # 复制代码
 COPY code/ /code/
