@@ -9,5 +9,3 @@ shapely
 imgaug
 scipy
 matplotlib
-scipy
-matplotlib

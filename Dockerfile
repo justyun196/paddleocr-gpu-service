@@ -1,21 +1,8 @@
 
-FROM ubuntu:20.04
+FROM python:3.10-slim
 
-# 安装 Python 3.10 和系统依赖
+# 安装系统依赖
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    software-properties-common \
-    && add-apt-repository ppa:deadsnakes/ppa \
-    && DEBIAN_FRONTEND=noninteractive apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    python3.10 \
-    python3.10-dev \
-    python3.10-distutils \
-    wget \
-    && wget https://bootstrap.pypa.io/get-pip.py \
-    && python3.10 get-pip.py \
-    && ln -sf /usr/bin/python3.10 /usr/bin/python \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     libgomp1 \
     libglib2.0-0 \
     libsm6 \
@@ -39,9 +26,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteract
     liblapack-dev \
     gfortran \
     wget \
-    && rm -rf /var/lib/apt/lists/* \
-    && ln -sf /usr/bin/python3 /usr/bin/python \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip
+    && rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /code
