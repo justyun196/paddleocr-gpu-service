@@ -1,11 +1,21 @@
 
 FROM ubuntu:20.04
 
-# 安装 Python 和系统依赖
+# 安装 Python 3.10 和系统依赖
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-dev \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    python3.10 \
+    python3.10-dev \
+    python3.10-distutils \
+    wget \
+    && wget https://bootstrap.pypa.io/get-pip.py \
+    && python3.10 get-pip.py \
+    && ln -sf /usr/bin/python3.10 /usr/bin/python \
+    && ln -sf /usr/bin/pip3 /usr/bin/pip \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     libgomp1 \
     libglib2.0-0 \
     libsm6 \
