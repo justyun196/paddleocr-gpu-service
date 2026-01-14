@@ -8,19 +8,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteract
     libsm6 \
     libxext6 \
     libxrender-dev \
-    libgl1 \
     libfontconfig1 \
     libfreetype6 \
     libx11-6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxcursor1 \
-    libxinerama1 \
     libpango-1.0-0 \
     libcairo2 \
-    libgdk-pixbuf2.0-0 \
-    libgtk-3-0 \
     libatlas-base-dev \
     liblapack-dev \
     gfortran \
