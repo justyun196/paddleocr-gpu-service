@@ -8,6 +8,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteract
     libsm6 \
     libxext6 \
     libxrender-dev \
+    libgl1 \
     libfontconfig1 \
     libfreetype6 \
     wget \
