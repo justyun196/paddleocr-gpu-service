@@ -3,7 +3,17 @@ import paddle
 paddle.set_device('cpu')
 paddle.disable_static()
 
-from paddleocr import PaddleOCRVL
+# 尝试导入 PaddleOCRVL，失败则使用基础版 PaddleOCR
+try:
+    from paddleocr.ppocr.vl import PaddleOCRVL
+    PADDLEOCR_VL_AVAILABLE = True
+    print("✅ PaddleOCRVL 可用")
+except ImportError:
+    from paddleocr import PaddleOCR
+    PaddleOCRVL = None  # 标记VL不可用
+    PADDLEOCR_VL_AVAILABLE = False
+    print("⚠️ PaddleOCRVL 不可用，使用基础版 PaddleOCR")
+
 from openpyxl import Workbook
 import cv2
 
@@ -13,15 +23,14 @@ ocr = None
 def init_ocr():
     global ocr
     if ocr is None:
-        print("正在初始化PaddleOCRVL模型（CPU版本）...")
-        ocr = PaddleOCRVL(
-            device='cpu',
-            precision='fp32',
-            enable_mkldnn=True,
-            vl_rec_model_name='PaddleOCR-VL-0.9B',
-            use_layout_detection=False
-        )
-        print("✅ OCR模型初始化完成")
+        if PADDLEOCR_VL_AVAILABLE:
+            print("正在初始化PaddleOCRVL模型（CPU版本）...")
+            ocr = PaddleOCRVL()
+            print("✅ PaddleOCRVL 模型初始化完成")
+        else:
+            print("正在初始化PaddleOCR基础版模型（CPU版本）...")
+            ocr = PaddleOCR(use_gpu=False, lang='ch')
+            print("✅ PaddleOCR 基础版模型初始化完成")
     return ocr
 
 def recognize_single_image(img_bytes):

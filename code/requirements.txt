@@ -1,6 +1,7 @@
+```
 paddleocr
 paddlepaddle
-opencv-python-headless
+opencv-python
 openpyxl
 oss2
 numpy
@@ -9,3 +10,4 @@ shapely
 imgaug
 scipy
 matplotlib
+```

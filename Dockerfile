@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsm6 \
     libxext6 \
     libxrender-dev \
+    libgl1 \
+    libgl1-mesa-glx \
     libfontconfig1 \
     libfreetype6 \
     wget \
