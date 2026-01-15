@@ -10,12 +10,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteract
     libxrender-dev \
     libfontconfig1 \
     libfreetype6 \
-    libx11-6 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libatlas-base-dev \
-    liblapack-dev \
-    gfortran \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
