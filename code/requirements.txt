@@ -1,6 +1,6 @@
 paddleocr
 paddlepaddle
-opencv-python
+opencv-python-headless
 openpyxl
 oss2
 numpy
