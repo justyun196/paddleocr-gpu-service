@@ -1,21 +1,15 @@
-
 FROM python:3.10-slim
 
 # 设置环境变量
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISABLE_MODEL_SOURCE_CHECK=True
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/code
-ENV MKL_NUM_THREADS=1
-ENV OMP_NUM_THREADS=1
 
-# 1. 更新源并安装必要依赖
+# 1. 安装系统依赖（使用经过验证的组合）
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # OpenGL库
-    libgl1 \
-    libglx-mesa0 \
+    libgl1-mesa-glx \
     libglib2.0-0 \
-    # X11相关
+    # X11库
     libsm6 \
     libxext6 \
     libxrender1 \
@@ -25,58 +19,138 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # 工具
     wget \
     curl \
-    ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# 2. 验证安装
-RUN echo "=== 已安装的OpenGL相关包 ===" && \
-    dpkg -l | grep -E "(libgl|mesa|opengl)" && \
-    echo "" && \
-    echo "=== libGL.so.1 文件位置 ===" && \
-    find /usr -name "libGL.so.1*" 2>/dev/null || echo "未找到libGL.so.1"
+# 2. 验证系统库
+RUN echo "=== 验证libGL.so.1 ===" && \
+    find /usr -name "libGL.so.1" 2>/dev/null | head -5 && \
+    echo "=== 验证完成 ==="
 
 # 设置工作目录
 WORKDIR /code
 
-# 复制依赖文件
+# 3. 复制依赖文件
 COPY code/requirements.txt .
 
-# 3. 安装Python依赖（分步安装，便于调试）
+# 4. 分步安装Python包（便于调试）
 RUN pip install --no-cache-dir --upgrade pip
 
-# 先安装基础依赖
-RUN pip install --no-cache-dir \
-    numpy==1.24.3 \
-    pillow==10.1.0
+# 步骤1：安装NumPy和Pillow
+RUN echo "安装NumPy和Pillow..." && \
+    pip install --no-cache-dir numpy==1.24.3 pillow==10.1.0 && \
+    python -c "import numpy as np; print(f'✅ NumPy: {np.__version__}'); from PIL import Image; print('✅ Pillow: OK')"
 
-# 安装OpenCV（完整版，不是headless）
-RUN pip install --no-cache-dir \
-    opencv-python==4.8.1.78
+# 步骤2：安装OpenCV
+RUN echo "安装OpenCV..." && \
+    pip install --no-cache-dir opencv-python==4.8.1.78 && \
+    python -c "import cv2; print(f'✅ OpenCV: {cv2.__version__}')"
 
-# 安装PaddlePaddle
-RUN pip install --no-cache-dir \
-    paddlepaddle
+# 步骤3：安装PaddlePaddle
+RUN echo "安装PaddlePaddle..." && \
+    pip install --no-cache-dir paddlepaddle && \
+    python -c "import paddle; print(f'✅ PaddlePaddle: {paddle.__version__}')"
 
-# 安装PaddleOCR
-RUN pip install --no-cache-dir \
-    paddleocr
+# 步骤4：安装PaddleOCR
+RUN echo "安装PaddleOCR..." && \
+    pip install --no-cache-dir paddleocr && \
+    python -c "from paddleocr import PaddleOCR; print('✅ PaddleOCR: 导入成功')"
 
-# 安装其他依赖
-RUN pip install --no-cache-dir \
-    openpyxl==3.1.2 \
-    oss2==2.18.1 \
-    shapely==2.0.2 \
-    scipy==1.11.4
+# 步骤5：安装其他依赖
+RUN echo "安装其他依赖..." && \
+    pip install --no-cache-dir openpyxl==3.1.2 oss2==2.18.1 && \
+    python -c "import openpyxl; import oss2; print('✅ 其他依赖: OK')"
 
-# 4. 验证环境
-RUN python -c "import cv2; print(f'OpenCV: {cv2.__version__}'); import numpy as np; print(f'NumPy: {np.__version__}'); import paddle; print(f'PaddlePaddle: {paddle.__version__}'); from paddleocr import PaddleOCR; print('PaddleOCR: OK')"
-
-# 复制代码
+# 5. 复制代码
 COPY code/ /code/
 
-# 暴露端口
+# 6. 最终验证
+RUN python -c "
+print('='*60)
+print('最终环境验证')
+print('='*60)
+
+import sys
+print(f'Python: {sys.version}')
+
+import cv2
+print(f'✅ OpenCV: {cv2.__version__}')
+
+import numpy as np
+print(f'✅ NumPy: {np.__version__}')
+
+import paddle
+print(f'✅ PaddlePaddle: {paddle.__version__}')
+print(f'   GPU支持: {paddle.device.is_compiled_with_cuda()}')
+
+try:
+    from paddleocr import PaddleOCR
+    print('✅ PaddleOCR: 导入成功')
+except Exception as e:
+    print(f'❌ PaddleOCR: {e}')
+
+try:
+    from paddleocr.ppocr.vl import PaddleOCRVL
+    print('✅ PaddleOCRVL: 导入成功')
+except Exception as e:
+    print(f'⚠️ PaddleOCRVL: {e}')
+
+print('='*60)
+"
+
+# 7. 创建测试脚本
+RUN cat > /code/test_imports.py << 'EOF'
+#!/usr/bin/env python3
+import os
+import sys
+
+# 设置环境变量
+os.environ['DISABLE_MODEL_SOURCE_CHECK'] = 'True'
+
+print("="*60)
+print("导入测试")
+print("="*60)
+
+# 测试所有导入
+imports = [
+    ('cv2', 'opencv-python'),
+    ('numpy', 'numpy'),
+    ('paddle', 'paddlepaddle'),
+    ('paddleocr', 'paddleocr'),
+    ('openpyxl', 'openpyxl'),
+    ('oss2', 'oss2'),
+]
+
+for module_name, package_name in imports:
+    try:
+        if module_name == 'cv2':
+            import cv2
+            print(f"✅ {package_name}: {cv2.__version__}")
+        elif module_name == 'numpy':
+            import numpy as np
+            print(f"✅ {package_name}: {np.__version__}")
+        elif module_name == 'paddle':
+            import paddle
+            print(f"✅ {package_name}: {paddle.__version__}")
+        elif module_name == 'paddleocr':
+            from paddleocr import PaddleOCR
+            print(f"✅ {package_name}: 导入成功")
+        elif module_name == 'openpyxl':
+            import openpyxl
+            print(f"✅ {package_name}: {openpyxl.__version__}")
+        elif module_name == 'oss2':
+            import oss2
+            print(f"✅ {package_name}: 导入成功")
+    except ImportError as e:
+        print(f"❌ {package_name}: {e}")
+    except Exception as e:
+        print(f"⚠️ {package_name}: {e}")
+
+print("="*60)
+EOF
+
+# 8. 暴露端口
 EXPOSE 9000
 
-# 启动命令
-CMD ["python", "server.py"]
+# 9. 启动命令
+CMD ["python", "test_imports.py"]
