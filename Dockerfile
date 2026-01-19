@@ -48,12 +48,12 @@ RUN echo "安装OpenCV..." && \
 
 # 步骤3：安装PaddlePaddle
 RUN echo "安装PaddlePaddle..." && \
-    pip install --no-cache-dir paddlepaddle && \
+    pip install --no-cache-dir paddlepaddle==2.5.1 && \
     python -c "import paddle; print(f'✅ PaddlePaddle: {paddle.__version__}')"
 
 # 步骤4：安装PaddleOCR
 RUN echo "安装PaddleOCR..." && \
-    pip install --no-cache-dir paddleocr && \
+    pip install --no-cache-dir paddleocr==2.7.0.3 && \
     python -c "from paddleocr import PaddleOCR; print('✅ PaddleOCR: 导入成功')"
 
 # 步骤5：安装其他依赖
