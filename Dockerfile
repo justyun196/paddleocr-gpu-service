@@ -39,17 +39,17 @@ RUN pip install --no-cache-dir --upgrade pip
 # 步骤1：安装NumPy和Pillow
 RUN echo "安装NumPy和Pillow..." && \
     pip install --no-cache-dir numpy==1.24.3 pillow==10.1.0 && \
-    python -c "import numpy as np; print(f'✅ NumPy: {np.__version__}'); from PIL import Image; print('✅ Pillow: OK')"
+    python -c "import numpy as np; print('✅ NumPy:', np.__version__); from PIL import Image; print('✅ Pillow: OK')"
 
 # 步骤2：安装OpenCV
 RUN echo "安装OpenCV..." && \
     pip install --no-cache-dir opencv-python==4.8.1.78 && \
-    python -c "import cv2; print(f'✅ OpenCV: {cv2.__version__}')"
+    python -c "import cv2; print('✅ OpenCV:', cv2.__version__)"
 
 # 步骤3：安装PaddlePaddle
 RUN echo "安装PaddlePaddle..." && \
     pip install --no-cache-dir paddlepaddle==2.5.1 && \
-    python -c "import paddle; print(f'✅ PaddlePaddle: {paddle.__version__}')"
+    python -c "import paddle; print('✅ PaddlePaddle:', paddle.__version__)"
 
 # 步骤4：安装PaddleOCR
 RUN echo "安装PaddleOCR..." && \
@@ -64,41 +64,32 @@ RUN echo "安装其他依赖..." && \
 # 5. 复制代码
 COPY code/ /code/
 
-# 6. 最终验证
-RUN python -c "
-print('='*60)
-print('最终环境验证')
-print('='*60)
+# 6. 最终验证（使用正确的多行语法）
+RUN python -c "print('='*60); \
+print('最终环境验证'); \
+print('='*60); \
+import sys; \
+print('Python:', sys.version); \
+import cv2; \
+print('✅ OpenCV:', cv2.__version__); \
+import numpy as np; \
+print('✅ NumPy:', np.__version__); \
+import paddle; \
+print('✅ PaddlePaddle:', paddle.__version__); \
+print('   GPU支持:', paddle.device.is_compiled_with_cuda()); \
+try: \
+    from paddleocr import PaddleOCR; \
+    print('✅ PaddleOCR: 导入成功'); \
+except Exception as e: \
+    print('❌ PaddleOCR:', e); \
+try: \
+    from paddleocr.ppocr.vl import PaddleOCRVL; \
+    print('✅ PaddleOCRVL: 导入成功'); \
+except Exception as e: \
+    print('⚠️ PaddleOCRVL:', e); \
+print('='*60)"
 
-import sys
-print(f'Python: {sys.version}')
-
-import cv2
-print(f'✅ OpenCV: {cv2.__version__}')
-
-import numpy as np
-print(f'✅ NumPy: {np.__version__}')
-
-import paddle
-print(f'✅ PaddlePaddle: {paddle.__version__}')
-print(f'   GPU支持: {paddle.device.is_compiled_with_cuda()}')
-
-try:
-    from paddleocr import PaddleOCR
-    print('✅ PaddleOCR: 导入成功')
-except Exception as e:
-    print(f'❌ PaddleOCR: {e}')
-
-try:
-    from paddleocr.ppocr.vl import PaddleOCRVL
-    print('✅ PaddleOCRVL: 导入成功')
-except Exception as e:
-    print(f'⚠️ PaddleOCRVL: {e}')
-
-print('='*60)
-"
-
-# 7. 创建测试脚本
+# 7. 创建测试脚本（使用正确的heredoc语法）
 RUN cat > /code/test_imports.py << 'EOF'
 #!/usr/bin/env python3
 import os
