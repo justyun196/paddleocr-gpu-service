@@ -56,11 +56,11 @@ RUN pip install --no-cache-dir \
 
 # 安装PaddlePaddle
 RUN pip install --no-cache-dir \
-    paddlepaddle==2.5.1
+    paddlepaddle
 
 # 安装PaddleOCR
 RUN pip install --no-cache-dir \
-    paddleocr==2.7.0.3
+    paddleocr
 
 # 安装其他依赖
 RUN pip install --no-cache-dir \
