@@ -41,36 +41,54 @@ def recognize_single_image(img_bytes):
         f.write(img_bytes)
     
     try:
-        result = ocr_instance.predict(temp_path)
-        
-        recognized_texts = []
-        if isinstance(result, list):
-            for doc in result:
-                if hasattr(doc, 'text_blocks'):
-                    for block in doc.text_blocks:
-                        recognized_texts.append({
-                            'text': block.text,
-                            'confidence': getattr(block, 'confidence', 1.0),
-                            'bbox': getattr(block, 'bbox', [])
-                        })
-                elif isinstance(doc, dict):
-                    if 'text_blocks' in doc:
-                        for block in doc['text_blocks']:
+        if PADDLEOCR_VL_AVAILABLE:
+            # VL 版本使用 predict 方法
+            result = ocr_instance.predict(temp_path)
+            
+            recognized_texts = []
+            if isinstance(result, list):
+                for doc in result:
+                    if hasattr(doc, 'text_blocks'):
+                        for block in doc.text_blocks:
                             recognized_texts.append({
-                                'text': block.get('text', ''),
-                                'confidence': float(block.get('confidence', 1.0)),
-                                'bbox': block.get('bbox', [])
+                                'text': block.text,
+                                'confidence': getattr(block, 'confidence', 1.0),
+                                'bbox': getattr(block, 'bbox', [])
                             })
-                    elif 'dt_polys' in doc and 'rec_texts' in doc:
-                        rec_texts = doc['rec_texts']
-                        rec_scores = doc.get('rec_scores', [])
-                        for i, (poly, text) in enumerate(zip(doc['dt_polys'], rec_texts)):
-                            confidence = rec_scores[i] if i < len(rec_scores) else 1.0
-                            recognized_texts.append({
-                                'text': text,
-                                'confidence': float(confidence),
-                                'bbox': poly.tolist() if hasattr(poly, 'tolist') else poly
-                            })
+                    elif isinstance(doc, dict):
+                        if 'text_blocks' in doc:
+                            for block in doc['text_blocks']:
+                                recognized_texts.append({
+                                    'text': block.get('text', ''),
+                                    'confidence': float(block.get('confidence', 1.0)),
+                                    'bbox': block.get('bbox', [])
+                                })
+                        elif 'dt_polys' in doc and 'rec_texts' in doc:
+                            rec_texts = doc['rec_texts']
+                            rec_scores = doc.get('rec_scores', [])
+                            for i, (poly, text) in enumerate(zip(doc['dt_polys'], rec_texts)):
+                                confidence = rec_scores[i] if i < len(rec_scores) else 1.0
+                                recognized_texts.append({
+                                    'text': text,
+                                    'confidence': float(confidence),
+                                    'bbox': poly.tolist() if hasattr(poly, 'tolist') else poly
+                                })
+        else:
+            # 基础版本直接调用实例
+            result = ocr_instance.ocr(temp_path, cls=True)
+            
+            recognized_texts = []
+            if result and result[0]:
+                for line in result[0]:
+                    box = line[0]
+                    text_info = line[1]
+                    text = text_info[0]
+                    confidence = text_info[1] if len(text_info) > 1 else 1.0
+                    recognized_texts.append({
+                        'text': text,
+                        'confidence': float(confidence),
+                        'bbox': box
+                    })
         
         full_text = '\n'.join([item['text'] for item in recognized_texts])
         
