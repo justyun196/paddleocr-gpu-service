@@ -29,7 +29,7 @@ def init_ocr():
             print("✅ PaddleOCRVL 模型初始化完成")
         else:
             print("正在初始化PaddleOCR基础版模型（CPU版本）...")
-            ocr = PaddleOCR(use_gpu=False, lang='ch')
+            ocr = PaddleOCR(use_angle_cls=True, lang='ch')
             print("✅ PaddleOCR 基础版模型初始化完成")
     return ocr
 
