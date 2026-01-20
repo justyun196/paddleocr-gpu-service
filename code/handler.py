@@ -53,7 +53,7 @@ def recognize_single_image(img_bytes):
         img_np = np.array(image)
         
         if not PADDLEOCR_VL_AVAILABLE:
-            result = ocr_instance.ocr(img_np, cls=True)
+            result = ocr_instance.ocr(img_np)
         else:
             temp_path = "/tmp/temp_image.jpg"
             with open(temp_path, "wb") as f:
