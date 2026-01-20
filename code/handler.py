@@ -1,8 +1,13 @@
 import json, base64, os, io, time, gc
+
+# 禁用 oneDNN 以避免兼容性问题（必须在导入 paddle 之前设置）
+os.environ['FLAGS_use_mkldnn'] = 'false'
+os.environ['FLAGS_use_cudnn'] = 'false'
+
 import paddle
 
-# 禁用 oneDNN 以避免兼容性问题
-os.environ['FLAGS_use_mkldnn'] = 'false'
+print(f"🔧 FLAGS_use_mkldnn: {os.environ.get('FLAGS_use_mkldnn', 'not set')}")
+print(f"🔧 FLAGS_use_cudnn: {os.environ.get('FLAGS_use_cudnn', 'not set')}")
 
 paddle.set_device('cpu')
 paddle.disable_static()
