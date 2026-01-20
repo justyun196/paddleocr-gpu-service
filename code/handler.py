@@ -323,7 +323,22 @@ def handler(event, context):
     
     if 'image' in evt:
         print("同步模式：处理单张图片")
-        img_bytes = base64.b64decode(evt['image'])
+        
+        image_data = evt['image']
+        
+        print(f"📥 接收到 base64 数据，长度: {len(image_data)}")
+        
+        try:
+            img_bytes = base64.b64decode(image_data)
+            print(f"✅ Base64 解码成功，图像大小: {len(img_bytes)} bytes")
+        except Exception as e:
+            print(f"❌ Base64 解码失败: {e}")
+            print(f"   数据前100字符: {image_data[:100]}")
+            return {
+                'success': False,
+                'error': f'Base64 解码失败: {str(e)}'
+            }
+        
         result = recognize_single_image(img_bytes)
         return result
     
