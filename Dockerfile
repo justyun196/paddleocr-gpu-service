@@ -11,14 +11,9 @@ ENV OMP_NUM_THREADS=1
 
 # 1. 更新源并安装必要依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # 完整的Mesa图形栈
+    # OpenGL库
     libgl1 \
-    libgl1-mesa-glx \
-    libgl1-mesa-dri \
-    libglapi-mesa \
     libglx-mesa0 \
-    mesa-utils \
-    # 其他依赖
     libglib2.0-0 \
     # OpenMP支持（PaddlePaddle需要）
     libgomp1 \
@@ -36,12 +31,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# 2. 创建必要的符号链接
-RUN mkdir -p /usr/lib/x86_64-linux-gnu/mesa && \
-    ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1 /usr/lib/libGL.so.1 2>/dev/null || true && \
-    ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1 /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 2>/dev/null || true && \
-    ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1.0 /usr/lib/libGL.so.1 2>/dev/null || true && \
-    echo "符号链接创建完成"
+# 2. 验证安装
+RUN echo "=== 已安装的OpenGL相关包 ===" && \
+    dpkg -l | grep -E "(libgl|mesa|opengl)" && \
+    echo "" && \
+    echo "=== libGL.so.1 文件位置 ===" && \
+    find /usr -name "libGL.so.1*" 2>/dev/null || echo "未找到libGL.so.1"
 
 # 设置工作目录
 WORKDIR /code
@@ -69,12 +64,24 @@ RUN pip install --no-cache-dir \
 RUN pip install --no-cache-dir \
     paddleocr
 
-# 安装其他依赖
+## 安装其他依赖
 RUN pip install --no-cache-dir \
     openpyxl \
     oss2 \
     shapely \
     scipy
+
+# 创建 libGL.so.1 符号链接
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1 /usr/lib/libGL.so.1 2>/dev/null || \
+    ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1.0 /usr/lib/libGL.so.1 2>/dev/null || \
+    ln -sf /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so.1 2>/dev/null || \
+    echo "Warning: Could not create libGL.so.1 symlink"
+
+# 复制代码4. 验证环境
+# 验证关键包是否安装成功
+RUN python -c "import cv2; print('OpenCV OK')"
+RUN python -c "import paddle; print('PaddlePaddle OK')"
+RUN python -c "import paddleocr; print('PaddleOCR OK')"
 
 # 复制代码
 COPY code/ /code/
