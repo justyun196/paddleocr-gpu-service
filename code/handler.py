@@ -1,5 +1,9 @@
 import json, base64, os, io, time, gc
 import paddle
+
+# 禁用 oneDNN 以避免兼容性问题
+os.environ['FLAGS_use_mkldnn'] = 'false'
+
 paddle.set_device('cpu')
 paddle.disable_static()
 
