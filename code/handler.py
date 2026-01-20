@@ -5,24 +5,18 @@ os.environ['FLAGS_use_mkldnn'] = 'false'
 os.environ['FLAGS_use_cudnn'] = 'false'
 
 import paddle
-
-print(f"🔧 FLAGS_use_mkldnn: {os.environ.get('FLAGS_use_mkldnn', 'not set')}")
-print(f"🔧 FLAGS_use_cudnn: {os.environ.get('FLAGS_use_cudnn', 'not set')}")
-
 paddle.set_device('cpu')
 paddle.disable_static()
 
 # 尝试导入 PaddleOCRVL，失败则使用基础版 PaddleOCR
 try:
     import paddleocr
-    print(f"📦 PaddleOCR 版本: {paddleocr.__version__}")
     from paddleocr.ppocr.vl import PaddleOCRVL
     PADDLEOCR_VL_AVAILABLE = True
     print("✅ PaddleOCRVL 可用")
 except ImportError as e:
-    print(f"⚠️ PaddleOCRVL 导入失败: {e}")
     from paddleocr import PaddleOCR
-    PaddleOCRVL = None  # 标记VL不可用
+    PaddleOCRVL = None
     PADDLEOCR_VL_AVAILABLE = False
     print("⚠️ PaddleOCRVL 不可用，使用基础版 PaddleOCR")
 
@@ -36,13 +30,9 @@ def init_ocr():
     global ocr
     if ocr is None:
         if PADDLEOCR_VL_AVAILABLE:
-            print("正在初始化PaddleOCRVL模型（CPU版本）...")
             ocr = PaddleOCRVL()
-            print("✅ PaddleOCRVL 模型初始化完成")
         else:
-            print("正在初始化PaddleOCR基础版模型（CPU版本）...")
-            ocr = PaddleOCR(use_angle_cls=True, lang='ch')
-            print("✅ PaddleOCR 基础版模型初始化完成")
+            ocr = PaddleOCR(use_angle_cls=True, lang='ch', use_mkldnn=False)
     return ocr
 
 def recognize_single_image(img_bytes):
@@ -113,42 +103,26 @@ def recognize_single_image(img_bytes):
         }
         
     except Exception as e:
-        print(f"❌ 图像识别失败: {e}")
-        import traceback
-        traceback.print_exc()
-        
         return {
             'success': False,
-            'error': f'识别失败: {str(e)}',
-            'traceback': traceback.format_exc()
+            'error': f'识别失败: {str(e)}'
         }
 
 def handler(event, context):
     evt = json.loads(event)
     
     if 'image' in evt:
-        print("同步模式：处理单张图片")
-        
-        image_data = evt['image']
-        
-        print(f"📥 接收到 base64 数据，长度: {len(image_data)}")
-        
         try:
-            img_bytes = base64.b64decode(image_data)
-            print(f"✅ Base64 解码成功，图像大小: {len(img_bytes)} bytes")
+            img_bytes = base64.b64decode(evt['image'])
         except Exception as e:
-            print(f"❌ Base64 解码失败: {e}")
-            print(f"   数据前100字符: {image_data[:100]}")
             return {
                 'success': False,
                 'error': f'Base64 解码失败: {str(e)}'
             }
-        
         result = recognize_single_image(img_bytes)
         return result
     
     elif 'bucket' in evt and 'key' in evt:
-        print("异步模式：批量处理")
         try:
             import oss2
             
