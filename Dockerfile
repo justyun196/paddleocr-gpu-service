@@ -1,48 +1,85 @@
+
 FROM python:3.10-slim
 
-# 安装系统依赖
+# 设置环境变量
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DISABLE_MODEL_SOURCE_CHECK=True
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/code
+ENV MKL_NUM_THREADS=1
+ENV OMP_NUM_THREADS=1
+
+# 1. 更新源并安装必要依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    # OpenGL库
+    libgl1 \
+    libglx-mesa0 \
     libglib2.0-0 \
+    # X11相关
     libsm6 \
     libxext6 \
     libxrender1 \
+    # 字体
+    libfontconfig1 \
+    libfreetype6 \
+    # 工具
     wget \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
+# 2. 验证安装
+RUN echo "=== 已安装的OpenGL相关包 ===" && \
+    dpkg -l | grep -E "(libgl|mesa|opengl)" && \
+    echo "" && \
+    echo "=== libGL.so.1 文件位置 ===" && \
+    find /usr -name "libGL.so.1*" 2>/dev/null || echo "未找到libGL.so.1"
+
+# 设置工作目录
 WORKDIR /code
 
 # 复制依赖文件
 COPY code/requirements.txt .
 
-# 安装Python依赖（一次性安装）
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    numpy==1.24.3 \
-    pillow==10.1.0 \
-    opencv-python==4.8.1.78 \
-    paddlepaddle==2.5.1 \
-    paddleocr==2.7.0.3 \
-    openpyxl==3.1.2 \
-    oss2==2.18.1
+# 3. 安装Python依赖（分步安装，便于调试）
+RUN pip install --no-cache-dir --upgrade pip
 
-# 验证安装
-RUN python -c "import cv2; print('OpenCV:', cv2.__version__)" && \
-    python -c "import paddle; print('PaddlePaddle:', paddle.__version__)" && \
-    python -c "from paddleocr import PaddleOCR; print('PaddleOCR: OK')"
+# 先安装基础依赖
+RUN pip install --no-cache-dir \
+    numpy \
+    pillow
+
+# 安装OpenCV（完整版，不是headless）
+RUN pip install --no-cache-dir \
+    opencv-python
+
+# 安装PaddlePaddle
+RUN pip install --no-cache-dir \
+    paddlepaddle
+
+# 安装PaddleOCR
+RUN pip install --no-cache-dir \
+    paddleocr
+
+# 安装其他依赖
+RUN pip install --no-cache-dir \
+    openpyxl \
+    oss2 \
+    shapely \
+    scipy
+
+# 4. 验证环境
+# 验证关键包是否安装成功
+RUN python -c "import cv2; print('OpenCV OK')"
+RUN python -c "import paddle; print('PaddlePaddle OK')"
+RUN python -c "import paddleocr; print('PaddleOCR OK')"
 
 # 复制代码
 COPY code/ /code/
 
-# 创建测试脚本
-RUN echo '#!/usr/bin/env python3' > /code/test.py && \
-    echo 'import cv2' >> /code/test.py && \
-    echo 'import paddle' >> /code/test.py && \
-    echo 'from paddleocr import PaddleOCR' >> /code/test.py && \
-    echo 'print("✅ 所有导入成功")' >> /code/test.py
-
+# 暴露端口
 EXPOSE 9000
 
-# 启动测试脚本
-CMD ["python", "/code/test.py"]
+# 启动命令
+CMD ["python", "server.py"]
