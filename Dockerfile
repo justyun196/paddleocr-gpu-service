@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglx-mesa0 \
     libglib2.0-0 \
+    # OpenMP支持（PaddlePaddle需要）
+    libgomp1 \
     # X11相关
     libsm6 \
     libxext6 \
