@@ -47,12 +47,12 @@ RUN pip install --no-cache-dir --upgrade pip
 
 # 先安装基础依赖
 RUN pip install --no-cache-dir \
-    numpy==1.24.3 \
-    pillow==10.1.0
+    numpy \
+    pillow
 
 # 安装OpenCV（完整版，不是headless）
 RUN pip install --no-cache-dir \
-    opencv-python==4.8.1.78
+    opencv-python
 
 # 安装PaddlePaddle
 RUN pip install --no-cache-dir \
@@ -64,13 +64,16 @@ RUN pip install --no-cache-dir \
 
 # 安装其他依赖
 RUN pip install --no-cache-dir \
-    openpyxl==3.1.2 \
-    oss2==2.18.1 \
-    shapely==2.0.2 \
-    scipy==1.11.4
+    openpyxl \
+    oss2 \
+    shapely \
+    scipy
 
 # 4. 验证环境
-RUN python -c "import cv2; print(f'OpenCV: {cv2.__version__}'); import numpy as np; print(f'NumPy: {np.__version__}'); import paddle; print(f'PaddlePaddle: {paddle.__version__}'); from paddleocr import PaddleOCR; print('PaddleOCR: OK')"
+# 验证关键包是否安装成功
+RUN python -c "import cv2; print('OpenCV OK')"
+RUN python -c "import paddle; print('PaddlePaddle OK')"
+RUN python -c "import paddleocr; print('PaddleOCR OK')"
 
 # 复制代码
 COPY code/ /code/
