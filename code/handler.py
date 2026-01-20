@@ -36,7 +36,7 @@ def init_ocr():
 def recognize_single_image(img_bytes):
     ocr_instance = init_ocr()
     
-    temp_path = "sample_card_1.jpg"
+    temp_path = "/tmp/temp_image.jpg"
     with open(temp_path, "wb") as f:
         f.write(img_bytes)
     
