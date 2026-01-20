@@ -9,10 +9,13 @@ paddle.disable_static()
 
 # 尝试导入 PaddleOCRVL，失败则使用基础版 PaddleOCR
 try:
+    import paddleocr
+    print(f"📦 PaddleOCR 版本: {paddleocr.__version__}")
     from paddleocr.ppocr.vl import PaddleOCRVL
     PADDLEOCR_VL_AVAILABLE = True
     print("✅ PaddleOCRVL 可用")
-except ImportError:
+except ImportError as e:
+    print(f"⚠️ PaddleOCRVL 导入失败: {e}")
     from paddleocr import PaddleOCR
     PaddleOCRVL = None  # 标记VL不可用
     PADDLEOCR_VL_AVAILABLE = False
