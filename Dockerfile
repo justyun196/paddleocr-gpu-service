@@ -64,14 +64,20 @@ RUN pip install --no-cache-dir \
 RUN pip install --no-cache-dir \
     paddleocr
 
-# 安装其他依赖
+## 安装其他依赖
 RUN pip install --no-cache-dir \
     openpyxl \
     oss2 \
     shapely \
     scipy
 
-# 4. 验证环境
+# 创建 libGL.so.1 符号链接
+RUN ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1 /usr/lib/libGL.so.1 2>/dev/null || \
+    ln -sf /usr/lib/x86_64-linux-gnu/libGL.so.1.0 /usr/lib/libGL.so.1 2>/dev/null || \
+    ln -sf /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 /usr/lib/libGL.so.1 2>/dev/null || \
+    echo "Warning: Could not create libGL.so.1 symlink"
+
+# 复制代码4. 验证环境
 # 验证关键包是否安装成功
 RUN python -c "import cv2; print('OpenCV OK')"
 RUN python -c "import paddle; print('PaddlePaddle OK')"
