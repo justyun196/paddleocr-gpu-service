@@ -4,6 +4,11 @@ import json, base64, os, io, time, gc
 os.environ['FLAGS_use_mkldnn'] = 'false'
 os.environ['FLAGS_use_cudnn'] = 'false'
 
+# 减少 PaddlePaddle 日志输出
+os.environ['GLOG_v'] = '2'  # 减少 PaddlePaddle 日志
+os.environ['PADDLE_LOG_LEVEL'] = 'ERROR'  # 只显示错误
+os.environ['DISABLE_MODEL_SOURCE_CHECK'] = 'True'  # 跳过模型源检查
+
 import paddle
 paddle.set_device('cpu')
 paddle.disable_static()
