@@ -18,6 +18,12 @@ os.environ['PYTHONWARNINGS'] = 'ignore'  # 忽略 Python 警告
 os.environ['PADDLE_DOWNLOAD_PROGRESS'] = '0'  # 禁用 Paddle 下载进度条
 os.environ['HUB_DOWNLOAD_PROGRESS'] = '0'  # 禁用 Hub 下载进度条
 
+# 禁用 PaddlePaddle 计算图详细日志
+os.environ['FLAGS_enable_pir'] = 'false'  # 禁用 PIR 模式（减少计算图日志）
+os.environ['FLAGS_print_ir'] = 'false'  # 禁用 IR 打印
+os.environ['FLAGS_graphviz_path'] = ''  # 禁用 Graphviz 输出
+os.environ['FLAGS_check_nan_inf'] = 'false'  # 禁用 NaN/Inf 检查（减少日志）
+
 import paddle
 paddle.set_device('cpu')
 paddle.disable_static()

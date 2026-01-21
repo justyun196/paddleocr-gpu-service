@@ -15,6 +15,12 @@ ENV GLOG_v=2
 ENV PADDLE_LOG_LEVEL=ERROR
 ENV DISABLE_MODEL_SOURCE_CHECK=True
 ENV PADDLE_DOWNLOAD_PROGRESS=0
+# 在 Dockerfile 中添加
+ENV FLAGS_enable_pir=false
+ENV FLAGS_print_ir=false
+ENV FLAGS_graphviz_path=
+ENV FLAGS_check_nan_inf=false
+
 # 1. 更新源并安装必要依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # OpenGL库
