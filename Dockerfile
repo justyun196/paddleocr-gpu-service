@@ -8,7 +8,13 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/code
 ENV MKL_NUM_THREADS=1
 ENV OMP_NUM_THREADS=1
-
+# 在 Dockerfile 中添加
+ENV FLAGS_use_mkldnn=false
+ENV FLAGS_use_cudnn=false
+ENV GLOG_v=2
+ENV PADDLE_LOG_LEVEL=ERROR
+ENV DISABLE_MODEL_SOURCE_CHECK=True
+ENV PADDLE_DOWNLOAD_PROGRESS=0
 # 1. 更新源并安装必要依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # OpenGL库

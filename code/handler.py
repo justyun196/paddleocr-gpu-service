@@ -9,6 +9,15 @@ os.environ['GLOG_v'] = '2'  # 减少 PaddlePaddle 日志
 os.environ['PADDLE_LOG_LEVEL'] = 'ERROR'  # 只显示错误
 os.environ['DISABLE_MODEL_SOURCE_CHECK'] = 'True'  # 跳过模型源检查
 
+# 减少其他库的日志输出
+os.environ['PYTHONUNBUFFERED'] = '0'  # 减少 Python 缓冲输出
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 禁用 TensorFlow 日志（如果有的话）
+os.environ['PYTHONWARNINGS'] = 'ignore'  # 忽略 Python 警告
+
+# 减少下载进度条输出
+os.environ['PADDLE_DOWNLOAD_PROGRESS'] = '0'  # 禁用 Paddle 下载进度条
+os.environ['HUB_DOWNLOAD_PROGRESS'] = '0'  # 禁用 Hub 下载进度条
+
 import paddle
 paddle.set_device('cpu')
 paddle.disable_static()
