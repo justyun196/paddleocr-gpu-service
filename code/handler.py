@@ -24,6 +24,13 @@ os.environ['FLAGS_print_ir'] = 'false'  # 禁用 IR 打印
 os.environ['FLAGS_graphviz_path'] = ''  # 禁用 Graphviz 输出
 os.environ['FLAGS_check_nan_inf'] = 'false'  # 禁用 NaN/Inf 检查（减少日志）
 
+# 更严格的日志控制
+os.environ['FLAGS_logging_level'] = '3'  # 只显示错误（3=ERROR）
+os.environ['GLOG_minloglevel'] = '3'  # 只显示错误
+os.environ['FLAGS_benchmark'] = 'false'  # 禁用性能基准测试日志
+os.environ['FLAGS_summary'] = 'false'  # 禁用摘要日志
+os.environ['FLAGS_detailed_error_msg'] = 'false'  # 禁用详细错误信息
+
 import paddle
 paddle.set_device('cpu')
 paddle.disable_static()

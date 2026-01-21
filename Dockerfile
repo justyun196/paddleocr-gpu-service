@@ -20,6 +20,12 @@ ENV FLAGS_enable_pir=false
 ENV FLAGS_print_ir=false
 ENV FLAGS_graphviz_path=
 ENV FLAGS_check_nan_inf=false
+# 在 Dockerfile 中添加
+ENV FLAGS_logging_level=3
+ENV GLOG_minloglevel=3
+ENV FLAGS_benchmark=false
+ENV FLAGS_summary=false
+ENV FLAGS_detailed_error_msg=false
 
 # 1. 更新源并安装必要依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
