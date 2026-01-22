@@ -1,33 +1,48 @@
 import json, base64, os, io, time, gc
 
-# 禁用 oneDNN 以避免兼容性问题（必须在导入 paddle 之前设置）
+# 完全禁用所有调试信息
+# ===============================
+# 1. 禁用 oneDNN 以避免兼容性问题（必须在导入 paddle 之前设置）
 os.environ['FLAGS_use_mkldnn'] = 'false'
 os.environ['FLAGS_use_cudnn'] = 'false'
 
-# 减少 PaddlePaddle 日志输出
-os.environ['GLOG_v'] = '2'  # 减少 PaddlePaddle 日志
-os.environ['PADDLE_LOG_LEVEL'] = 'ERROR'  # 只显示错误
+# 2. 完全禁用 PaddlePaddle 日志
+os.environ['GLOG_v'] = '3'  # 最高级别，只显示致命错误
+os.environ['GLOG_minloglevel'] = '4'  # 完全禁用所有日志
+os.environ['PADDLE_LOG_LEVEL'] = 'FATAL'  # 只显示致命错误
+os.environ['FLAGS_logging_level'] = '4'  # 完全禁用
 os.environ['DISABLE_MODEL_SOURCE_CHECK'] = 'True'  # 跳过模型源检查
 
-# 减少其他库的日志输出
+# 3. 禁用其他库的日志
 os.environ['PYTHONUNBUFFERED'] = '0'  # 减少 Python 缓冲输出
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 禁用 TensorFlow 日志（如果有的话）
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 禁用 TensorFlow 日志
 os.environ['PYTHONWARNINGS'] = 'ignore'  # 忽略 Python 警告
 
-# 减少下载进度条输出
+# 4. 禁用下载进度条
 os.environ['PADDLE_DOWNLOAD_PROGRESS'] = '0'  # 禁用 Paddle 下载进度条
 os.environ['HUB_DOWNLOAD_PROGRESS'] = '0'  # 禁用 Hub 下载进度条
 
-# 禁用 PaddlePaddle 计算图详细日志
-os.environ['FLAGS_enable_pir'] = 'false'  # 禁用 PIR 模式（减少计算图日志）
+# 5. 禁用计算图和调试信息
+os.environ['FLAGS_enable_pir'] = 'false'  # 禁用 PIR 模式
 os.environ['FLAGS_print_ir'] = 'false'  # 禁用 IR 打印
 os.environ['FLAGS_graphviz_path'] = ''  # 禁用 Graphviz 输出
-os.environ['FLAGS_check_nan_inf'] = 'false'  # 禁用 NaN/Inf 检查（减少日志）
+os.environ['FLAGS_check_nan_inf'] = 'false'  # 禁用 NaN/Inf 检查
+os.environ['FLAGS_benchmark'] = 'false'  # 禁用性能基准测试
+os.environ['FLAGS_summary'] = 'false'  # 禁用摘要信息
+os.environ['FLAGS_detailed_error_msg'] = 'false'  # 禁用详细错误信息
 
-# 更严格的日志控制
-os.environ['FLAGS_logging_level'] = '3'  # 只显示错误（3=ERROR）
-os.environ['GLOG_minloglevel'] = '3'  # 只显示错误
-os.environ['FLAGS_benchmark'] = 'false'  # 禁用性能基准测试日志
+# 6. 禁用 Python 标准库日志
+import logging
+logging.basicConfig(level=logging.CRITICAL)  # 只显示致命错误
+
+# 7. 重定向标准输出和标准错误（可选，谨慎使用）
+# 如果需要完全静默，可以取消下面的注释
+# import sys
+# class NullDevice:
+#     def write(self, s):
+#         pass
+# sys.stdout = NullDevice()
+# sys.stderr = NullDevice()
 os.environ['FLAGS_summary'] = 'false'  # 禁用摘要日志
 os.environ['FLAGS_detailed_error_msg'] = 'false'  # 禁用详细错误信息
 
